@@ -17,4 +17,4 @@ COPY . /app/
 EXPOSE 5000
 
 # Command to run the application with gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "main:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
