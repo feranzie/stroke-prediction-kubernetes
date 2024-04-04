@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stroke-prediction
+spec:
+  selector:
+    matchLabels:
+      app: stroke-prediction
+  template:
+    metadata:
+      labels:
+        app: stroke-prediction
+    spec:
+      containers:
+      - name: stroke-prediction
+        image: stroke-prediction:v3
+        resources:
+          limits:
+            memory: "500Mi"
+            cpu: "0.5"
+        ports:
+        - containerPort: 8000
