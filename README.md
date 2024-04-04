@@ -1,4 +1,4 @@
-# stroke prediction service w kubernetes
+# stroke prediction FASTAPI service w kubernetes
 
 
 ## clone repo
