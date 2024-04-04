@@ -1,85 +1,65 @@
 import os
 import joblib
 import pandas as pd
-from flask import Flask, request
-from flasgger import Swagger
+from fastapi import Depends, FastAPI
+from models import PredSchema
+from fastapi.responses import JSONResponse,HTMLResponse
 
-app = Flask(__name__)
-Swagger(app)
+
+app = FastAPI()
 
 
 # Load the trained pipeline
 pipeline_filename = os.path.join('trained_model', 'stroke_prediction_pipeline.pkl')
 pipeline = joblib.load(pipeline_filename)
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    """
-    Predict stroke probability for new data
-    ---
-    parameters:
-      - name: body
-        in: body
-        required: true
-        schema:
-          id: PredictInput
-          properties:
-            age:
-              type: number
-              description: Age of the person
-            hypertension:
-              type: number
-              description: Hypertension (0 for No, 1 for Yes)
-            heart_disease:
-              type: number
-              description: Heart disease (0 for No, 1 for Yes)
-            avg_glucose_level:
-              type: number
-              description: Average glucose level
-            bmi:
-              type: number
-              description: Body mass index (BMI)
-            gender:
-              type: string
-              description: Gender (Male, Female, Other)
-            ever_married:
-              type: string
-              description: Marital status (Yes, No)
-            work_type:
-              type: string
-              description: Type of work (Private, Self-employed, etc.)
-            Residence_type:
-              type: string
-              description: Residence type (Urban, Rural)
-            smoking_status:
-              type: string
-              description: Smoking status (formerly smoked, never smoked, etc.)
-    responses:
-      200:
-        description: Successfully predicted stroke probability
-        schema:
-          id: PredictOutput
-          properties:
-            prediction:
-              type: number
-              description: Predicted stroke probability (0 for No, 1 for Yes)
-    """
-    data = request.get_json()
+@app.post('/predict')
+async def predict(user_data:PredSchema):
+    age=user_data.age
+    hypertension=user_data.hypertension
+    heart_disease=user_data.heart_disease
+    avg_glucose_level=user_data.avg_glucose_level
+    bmi=user_data.bmi
+    gender=user_data.gender
+    ever_married=user_data.ever_married
+    work_type=user_data.work_type
+    Residence_type=user_data.Residence_type
+    smoking_status=user_data.smoking_status
 
-    # Convert data to a DataFrame
-    new_data = pd.DataFrame(data, index=[0])
+    try:
+        data =  {
+                "age":age,
+                "hypertension":hypertension,
+                "heart_disease":heart_disease,
+                'avg_glucose_level':avg_glucose_level,
+                "bmi":bmi,
+                "gender":gender,
+                "ever_married":ever_married,
+                "work_type":work_type,
+                "Residence_type":Residence_type,
+                "smoking_status":smoking_status
+            }
+        
 
-    # Make predictions using the pipeline
-    prediction = pipeline.predict(new_data)
+        # Convert data to a DataFrame
+        new_data = pd.DataFrame(data, index=[0])
 
-    pred_mapping = {
-        0: 'No-Stroke',
-        1: 'Stroke'
-    }
+        # Make predictions using the pipeline
+        prediction = pipeline.predict(new_data)
 
-    predicted_class = pred_mapping[prediction[0]]
+        pred_mapping = {
+            0: 'No-Stroke',
+            1: 'Stroke'
+        }
 
-    return f"Model prediction is {predicted_class}"
+        predicted_class = pred_mapping[prediction[0]]
+        return JSONResponse(content={"message" : f"Model prediction is {predicted_class}"},
+                            status_code= 201
+               )
+        return f"Model prediction is {predicted_class}"
+    except Exception as e:
+         return "Error in processing AI response"
+
 
 if __name__ == '__main__':
     app.run(debug=True)
